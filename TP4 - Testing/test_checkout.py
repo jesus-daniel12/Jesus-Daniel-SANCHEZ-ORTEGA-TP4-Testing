@@ -75,3 +75,11 @@ def test_si_el_item_trae_su_propio_precio_se_usa_el_del_catalogo():
     subtotal = calcular_subtotal(carrito)
 
     assert subtotal == Decimal("24999.90")
+
+
+def test_el_talle_con_espacios_alrededor_es_valido():
+    carrito = [item("buzo", talle="  m ")]
+
+    subtotal = calcular_subtotal(carrito)
+
+    assert subtotal == Decimal("24999.90")
