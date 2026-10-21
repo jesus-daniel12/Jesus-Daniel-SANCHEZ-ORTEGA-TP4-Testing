@@ -52,6 +52,9 @@ def validar_item(item):
 
 
 def calcular_subtotal(carrito):
+    if len(carrito) == 0:
+        raise CheckoutError("CARRITO_VACIO", "El carrito está vacío")
+
     subtotal = Decimal("0")
     for item in carrito:
         validar_item(item)
