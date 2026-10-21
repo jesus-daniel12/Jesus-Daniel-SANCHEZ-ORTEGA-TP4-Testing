@@ -184,3 +184,96 @@ def test_el_envio_gratis_se_calcula_con_el_subtotal_ya_descontado():
         "envio": Decimal("2500.00"),
         "total": Decimal("61499.30"),
     }
+
+
+@pytest.mark.parametrize("cantidad", [0, 11])
+def test_las_cantidades_fuera_del_rango_son_invalidas(cantidad):
+    un_item = item(cantidad=cantidad)
+
+    codigo = codigo_de_error(validar_item, un_item)
+
+    assert codigo == "CANTIDAD_INVALIDA"
+
+
+def test_un_talle_que_no_existe_da_error():
+    un_item = item(talle="XXXL")
+
+    codigo = codigo_de_error(validar_item, un_item)
+
+    assert codigo == "TALLE_INVALIDO"
+
+
+def test_las_prendas_de_distintos_items_se_suman_para_el_descuento():
+    carrito = [item("buzo", cantidad=2), item("remera", cantidad=3)]
+
+    resultado = calcular_total(carrito, "CABA", None, HOY_VIGENTE)
+
+    assert resultado == {
+        "subtotal": Decimal("85998.30"),
+        "descuento": Decimal("8599.83"),
+        "envio": Decimal("0.00"),
+        "total": Decimal("77398.47"),
+    }
+
+
+@pytest.mark.parametrize("subtotal, esperado", [
+    (Decimal("20000.00"), Decimal("3000.00")),
+    (Decimal("20000.01"), Decimal("3000.00")),
+])
+def test_bienvenida_desde_20000_descuenta_3000(subtotal, esperado):
+    descuento = calcular_descuento(subtotal, 1, "BIENVENIDA", HOY_VIGENTE)
+
+    assert descuento == esperado
+
+
+def test_bienvenida_con_menos_de_20000_da_error():
+    subtotal = Decimal("19999.99")
+
+    codigo = codigo_de_error(calcular_descuento, subtotal, 1, "BIENVENIDA", HOY_VIGENTE)
+
+    assert codigo == "CUPON_MINIMO_NO_ALCANZADO"
+
+
+def test_egresados2026_el_1_de_diciembre_esta_vencido():
+    subtotal = Decimal("100000.00")
+
+    codigo = codigo_de_error(calcular_descuento, subtotal, 1, "EGRESADOS2026", date(2026, 12, 1))
+
+    assert codigo == "CUPON_VENCIDO"
+
+
+@pytest.mark.parametrize("zona, esperado", [
+    ("CABA", Decimal("2500.00")),
+    ("GBA", Decimal("4000.00")),
+    ("INTERIOR", Decimal("6500.00")),
+    ("RETIRO", Decimal("0.00")),
+    ("  caba ", Decimal("2500.00")),
+])
+def test_costo_de_envio_por_zona(zona, esperado):
+    envio = calcular_envio(Decimal("10000.00"), zona)
+
+    assert envio == esperado
+
+
+@pytest.mark.parametrize("subtotal, esperado", [
+    (Decimal("59999.99"), Decimal("2500.00")),
+    (Decimal("60000.00"), Decimal("0.00")),
+    (Decimal("60000.01"), Decimal("0.00")),
+])
+def test_envio_gratis_desde_60000(subtotal, esperado):
+    envio = calcular_envio(subtotal, "CABA")
+
+    assert envio == esperado
+
+
+def test_el_ejemplo_completo_de_la_especificacion():
+    carrito = [item("buzo", "M", 2)]
+
+    resultado = calcular_total(carrito, "CABA", None, HOY_VIGENTE)
+
+    assert resultado == {
+        "subtotal": Decimal("49999.80"),
+        "descuento": Decimal("0.00"),
+        "envio": Decimal("2500.00"),
+        "total": Decimal("52499.80"),
+    }
