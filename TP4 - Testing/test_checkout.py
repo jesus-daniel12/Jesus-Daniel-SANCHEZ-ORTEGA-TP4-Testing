@@ -59,3 +59,11 @@ def test_calcular_total_no_modifica_el_carrito_que_recibe():
     calcular_total(carrito, "CABA", None, HOY_VIGENTE)
 
     assert carrito == copia
+
+
+def test_un_producto_que_no_esta_en_el_catalogo_da_error():
+    carrito = [item("gorra")]
+
+    codigo = codigo_de_error(calcular_subtotal, carrito)
+
+    assert codigo == "PRODUCTO_INEXISTENTE"
