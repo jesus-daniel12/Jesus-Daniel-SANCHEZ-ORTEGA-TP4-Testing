@@ -1,3 +1,4 @@
+import copy
 from datetime import date
 from decimal import Decimal
 
@@ -30,13 +31,10 @@ def test_cantidad_cero_es_invalida():
 
 
 def test_total_con_cupon_usa_decimal_y_redondea_el_medio_centavo_para_arriba():
-    # Arrange
     carrito = [item("remera")]
 
-    # Act
     resultado = calcular_total(carrito, "CABA", "EGRESADOS2026", HOY_VIGENTE)
 
-    # Assert
     assert resultado == {
         "subtotal": Decimal("11999.50"),
         "descuento": Decimal("1799.93"),
@@ -47,11 +45,17 @@ def test_total_con_cupon_usa_decimal_y_redondea_el_medio_centavo_para_arriba():
 
 
 def test_diez_prendas_de_un_mismo_item_es_una_cantidad_valida():
-    # Arrange
     carrito = [item("remera", cantidad=10)]
 
-    # Act
     subtotal = calcular_subtotal(carrito)
 
-    # Assert
     assert subtotal == Decimal("119995.00")
+
+
+def test_calcular_total_no_modifica_el_carrito_que_recibe():
+    carrito = [item("buzo", talle="m", cantidad=2)]
+    copia = copy.deepcopy(carrito)
+
+    calcular_total(carrito, "CABA", None, HOY_VIGENTE)
+
+    assert carrito == copia
