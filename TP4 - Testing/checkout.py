@@ -37,9 +37,9 @@ def redondear(monto):
 
 
 def validar_item(item):
-    item["talle"] = item["talle"].upper()
+    talle = item["talle"].upper()
 
-    if item["talle"] not in TALLES:
+    if talle not in TALLES:
         raise CheckoutError("TALLE_INVALIDO", f"Talle inválido: {item['talle']}")
 
     if not (1 <= item["cantidad"] <= 10):
