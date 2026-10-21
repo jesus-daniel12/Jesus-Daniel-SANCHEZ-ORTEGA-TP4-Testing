@@ -4,6 +4,7 @@ from decimal import Decimal
 
 import pytest
 
+import checkout
 from checkout import (
     CheckoutError,
     calcular_descuento,
@@ -85,15 +86,6 @@ def test_el_talle_con_espacios_alrededor_es_valido():
     assert subtotal == Decimal("24999.90")
 
 
-@pytest.mark.parametrize("cantidad", [1.5, 2.0, "2"])
-def test_una_cantidad_que_no_es_un_numero_entero_es_invalida(cantidad):
-    carrito = [item("buzo", cantidad=cantidad)]
-
-    codigo = codigo_de_error(calcular_subtotal, carrito)
-
-    assert codigo == "CANTIDAD_INVALIDA"
-
-
 @pytest.mark.parametrize("cantidad", [1.5, "2"])
 def test_una_cantidad_que_no_es_un_numero_entero_es_invalida(cantidad):
     un_item = item(cantidad=cantidad)
@@ -117,3 +109,78 @@ def test_con_cinco_prendas_se_aplica_el_diez_por_ciento():
     descuento = calcular_descuento(subtotal, 5, None, HOY_VIGENTE)
 
     assert descuento == Decimal("10000.00")
+
+
+def test_egresados2026_vale_el_30_de_noviembre_inclusive():
+    subtotal = Decimal("100000.00")
+
+    descuento = calcular_descuento(subtotal, 1, "EGRESADOS2026", date(2026, 11, 30))
+
+    assert descuento == Decimal("15000.00")
+
+
+def test_sin_fecha_se_usa_la_fecha_del_dia_de_la_llamada(monkeypatch):
+    class FechaFalsa(date):
+        @classmethod
+        def today(cls):
+            return cls(2026, 12, 1)
+
+    monkeypatch.setattr(checkout, "date", FechaFalsa)
+
+    codigo = codigo_de_error(calcular_descuento, Decimal("100000.00"), 1, "EGRESADOS2026")
+
+    assert codigo == "CUPON_VENCIDO"
+
+
+def test_el_cupon_en_minuscula_y_con_espacios_es_valido():
+    subtotal = Decimal("100000.00")
+
+    descuento = calcular_descuento(subtotal, 1, "  egresados2026 ", HOY_VIGENTE)
+
+    assert descuento == Decimal("15000.00")
+
+
+@pytest.mark.parametrize("cupon", ["", "   "])
+def test_un_cupon_vacio_es_como_no_usar_cupon(cupon):
+    subtotal = Decimal("100000.00")
+
+    descuento = calcular_descuento(subtotal, 1, cupon, HOY_VIGENTE)
+
+    assert descuento == Decimal("0.00")
+
+
+def test_debug100_no_es_un_cupon_valido():
+    subtotal = Decimal("100000.00")
+
+    codigo = codigo_de_error(calcular_descuento, subtotal, 1, "DEBUG100", HOY_VIGENTE)
+
+    assert codigo == "CUPON_INVALIDO"
+
+
+def test_el_cupon_no_se_suma_al_descuento_por_cantidad_se_aplica_el_mayor():
+    subtotal = Decimal("100000.00")
+
+    descuento = calcular_descuento(subtotal, 6, "EGRESADOS2026", HOY_VIGENTE)
+
+    assert descuento == Decimal("15000.00")
+
+
+def test_una_zona_que_no_existe_da_error():
+    subtotal = Decimal("10000.00")
+
+    codigo = codigo_de_error(calcular_envio, subtotal, "MARTE")
+
+    assert codigo == "ZONA_INVALIDA"
+
+
+def test_el_envio_gratis_se_calcula_con_el_subtotal_ya_descontado():
+    carrito = [item("buzo", cantidad=2), item("remera")]
+
+    resultado = calcular_total(carrito, "CABA", "BIENVENIDA", HOY_VIGENTE)
+
+    assert resultado == {
+        "subtotal": Decimal("61999.30"),
+        "descuento": Decimal("3000.00"),
+        "envio": Decimal("2500.00"),
+        "total": Decimal("61499.30"),
+    }
