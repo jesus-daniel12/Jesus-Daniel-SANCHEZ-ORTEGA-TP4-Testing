@@ -44,3 +44,14 @@ def test_total_con_cupon_usa_decimal_y_redondea_el_medio_centavo_para_arriba():
         "total": Decimal("12699.57"),
     }
     assert all(type(valor) is Decimal for valor in resultado.values())
+
+
+def test_diez_prendas_de_un_mismo_item_es_una_cantidad_valida():
+    # Arrange
+    carrito = [item("remera", cantidad=10)]
+
+    # Act
+    subtotal = calcular_subtotal(carrito)
+
+    # Assert
+    assert subtotal == Decimal("119995.00")
