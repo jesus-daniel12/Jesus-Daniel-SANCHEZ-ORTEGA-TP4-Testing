@@ -83,3 +83,21 @@ def test_el_talle_con_espacios_alrededor_es_valido():
     subtotal = calcular_subtotal(carrito)
 
     assert subtotal == Decimal("24999.90")
+
+
+@pytest.mark.parametrize("cantidad", [1.5, 2.0, "2"])
+def test_una_cantidad_que_no_es_un_numero_entero_es_invalida(cantidad):
+    carrito = [item("buzo", cantidad=cantidad)]
+
+    codigo = codigo_de_error(calcular_subtotal, carrito)
+
+    assert codigo == "CANTIDAD_INVALIDA"
+
+
+@pytest.mark.parametrize("cantidad", [1.5, "2"])
+def test_una_cantidad_que_no_es_un_numero_entero_es_invalida(cantidad):
+    un_item = item(cantidad=cantidad)
+
+    codigo = codigo_de_error(validar_item, un_item)
+
+    assert codigo == "CANTIDAD_INVALIDA"
