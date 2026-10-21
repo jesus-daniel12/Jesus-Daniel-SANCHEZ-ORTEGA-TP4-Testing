@@ -109,3 +109,11 @@ def test_un_carrito_vacio_da_error():
     codigo = codigo_de_error(calcular_total, carrito, "CABA")
 
     assert codigo == "CARRITO_VACIO"
+
+
+def test_con_cinco_prendas_se_aplica_el_diez_por_ciento():
+    subtotal = Decimal("100000.00")
+
+    descuento = calcular_descuento(subtotal, 5, None, HOY_VIGENTE)
+
+    assert descuento == Decimal("10000.00")
