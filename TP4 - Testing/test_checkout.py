@@ -101,3 +101,11 @@ def test_una_cantidad_que_no_es_un_numero_entero_es_invalida(cantidad):
     codigo = codigo_de_error(validar_item, un_item)
 
     assert codigo == "CANTIDAD_INVALIDA"
+
+
+def test_un_carrito_vacio_da_error():
+    carrito = []
+
+    codigo = codigo_de_error(calcular_total, carrito, "CABA")
+
+    assert codigo == "CARRITO_VACIO"
