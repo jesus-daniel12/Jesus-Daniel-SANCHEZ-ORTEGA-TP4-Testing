@@ -67,3 +67,11 @@ def test_un_producto_que_no_esta_en_el_catalogo_da_error():
     codigo = codigo_de_error(calcular_subtotal, carrito)
 
     assert codigo == "PRODUCTO_INEXISTENTE"
+
+
+def test_si_el_item_trae_su_propio_precio_se_usa_el_del_catalogo():
+    carrito = [item("buzo", precio=1)]
+
+    subtotal = calcular_subtotal(carrito)
+
+    assert subtotal == Decimal("24999.90")
